@@ -4,19 +4,33 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 
 const app = express();
-app.use(cors()); // Allow all cross-origin requests
+
+// 1. Define who is legally allowed to talk to this server
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // In case you set it in Railway environment variables
+  "https://vaaratav-web.vercel.app", // <--- VERIFY THIS IS YOUR EXACT VERCEL URL
+  "http://localhost:3000" // Keep localhost so you can still test on your computer
+];
+
+// 2. Secure standard HTTP requests
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 
 const server = http.createServer(app);
 
-// Configure Socket.io to accept connections from your future Vercel domain
+// 3. Secure Socket.io connections
 const io = new Server(server, {
   cors: {
-    origin: "*", // We will lock this down to your Vercel URL later for security
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
+    credentials: true // Crucial for cross-origin connections
   },
 });
 
-// --- YOUR EXACT SOCKET LOGIC ---
+// --- YOUR EXACT SOCKET LOGIC (Unchanged) ---
 io.on("connection", (socket) => {
   console.log("User Connected:", socket.id);
 
